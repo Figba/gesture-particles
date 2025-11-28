@@ -1,6 +1,3 @@
-import { Hands, HAND_CONNECTIONS } from '@mediapipe/hands';
-import { drawConnectors, drawLandmarks } from '@mediapipe/drawing_utils';
-
 /**
  * 手势识别类
  * 负责调用摄像头，使用 MediaPipe 识别手部关键点，并计算手势数据。
@@ -11,7 +8,7 @@ export class HandTracker {
         this.canvasElement = canvasElement;
         this.canvasCtx = canvasElement.getContext('2d');
         this.onGestureCallback = onGestureCallback;
-        this.onErrorCallback = onErrorCallback; // 新增：错误回调
+        this.onErrorCallback = onErrorCallback;
         
         this.hands = null;
         this.isReady = false;
@@ -21,8 +18,15 @@ export class HandTracker {
     }
 
     init() {
-        // 初始化 MediaPipe Hands
-        this.hands = new Hands({
+        // 检查全局变量是否加载
+        if (!window.Hands) {
+            console.error('MediaPipe Hands script not loaded!');
+            if (this.onErrorCallback) this.onErrorCallback('MediaPipe 加载失败，请刷新重试');
+            return;
+        }
+
+        // 使用全局 Hands 对象
+        this.hands = new window.Hands({
             locateFile: (file) => {
                 return `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`;
             }
@@ -69,9 +73,11 @@ export class HandTracker {
         if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
             const landmarks = results.multiHandLandmarks[0];
 
-            // 绘制骨架
-            drawConnectors(this.canvasCtx, landmarks, HAND_CONNECTIONS, {color: '#00FF00', lineWidth: 2});
-            drawLandmarks(this.canvasCtx, landmarks, {color: '#FF0000', lineWidth: 1});
+            // 绘制骨架 (使用全局 drawingUtils)
+            if (window.drawConnectors && window.drawLandmarks) {
+                window.drawConnectors(this.canvasCtx, landmarks, window.HAND_CONNECTIONS, {color: '#00FF00', lineWidth: 2});
+                window.drawLandmarks(this.canvasCtx, landmarks, {color: '#FF0000', lineWidth: 1});
+            }
 
             // 计算手势张合度
             const openness = this.calculateHandOpenness(landmarks);
