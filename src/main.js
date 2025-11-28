@@ -51,8 +51,16 @@ document.addEventListener('DOMContentLoaded', () => {
         statusText.textContent = `手势控制中: ${(openness * 100).toFixed(0)}%`;
     };
 
+    // 错误处理回调
+    const onError = (errorMsg) => {
+        statusText.textContent = errorMsg;
+        statusText.style.color = '#ff4444';
+        statusDot.style.backgroundColor = '#ff4444';
+    };
+
     // 启动手势识别
-    const handTracker = new HandTracker(videoElement, canvasElement, onGesture);
+    // 传入 onGesture 和 onError 两个回调
+    const handTracker = new HandTracker(videoElement, canvasElement, onGesture, onError);
     handTracker.start();
 });
 
