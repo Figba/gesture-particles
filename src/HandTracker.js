@@ -40,20 +40,26 @@ export class HandTracker {
 
     async start() {
         try {
-            // 1. 直接请求摄像头权限
+            // 1. 第一步：仅仅是请求权限，不干别的
             console.log('Requesting camera access...');
+            
+            // 兼容性检查
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                throw new Error('浏览器不支持摄像头 API');
+            }
+
             const stream = await navigator.mediaDevices.getUserMedia({
                 video: { 
                     width: { ideal: 320 }, 
                     height: { ideal: 240 },
-                    facingMode: "user" // 优先使用前置摄像头
+                    facingMode: "user"
                 }
             });
 
-            // 2. 设置视频源
+            // 2. 拿到流之后，马上显示出来
             this.videoElement.srcObject = stream;
             
-            // 3. 等待视频加载完成
+            // 3. 播放视频
             await new Promise((resolve) => {
                 this.videoElement.onloadedmetadata = () => {
                     this.videoElement.play();
@@ -64,19 +70,23 @@ export class HandTracker {
             console.log('Camera started manually');
             this.isReady = true;
 
-            // 4. 开始循环检测
+            // 4. 只有在摄像头成功启动后，才开始跑 AI 循环
+            // 这样即使 AI 没加载完，至少用户能看到自己
             this.detectLoop();
 
         } catch (err) {
+            // ... 错误处理保持不变 ...
             console.error('Error starting camera:', err);
             if (this.onErrorCallback) {
                 let msg = '无法访问摄像头';
-                if (err.name === 'NotAllowedError') {
-                    msg = '您拒绝了摄像头权限，请在浏览器设置中开启。';
+                if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+                    msg = '请点击地址栏左侧图标，允许使用摄像头。';
                 } else if (err.name === 'NotFoundError') {
                     msg = '未找到摄像头设备。';
                 } else if (err.name === 'NotReadableError') {
                     msg = '摄像头可能被其他应用占用。';
+                } else {
+                     msg = '摄像头错误: ' + err.message;
                 }
                 this.onErrorCallback(msg);
             } else {
