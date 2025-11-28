@@ -71,9 +71,13 @@ document.addEventListener('DOMContentLoaded', () => {
         
         handTracker.start().then(() => {
             startBtn.style.display = 'none'; // 成功后隐藏按钮
-        }).catch(() => {
+            statusText.textContent = '摄像头已启动';
+        }).catch((err) => {
+            console.error(err);
             startBtn.disabled = false;
-            startBtn.textContent = '重试开启摄像头';
+            // 直接把错误原因写在按钮上
+            startBtn.textContent = err.message || '启动失败，点此重试';
+            startBtn.style.backgroundColor = '#ff4444';
         });
     });
 });

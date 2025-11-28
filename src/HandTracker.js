@@ -40,60 +40,57 @@ export class HandTracker {
 
     async start() {
         try {
-            // 1. 第一步：仅仅是请求权限，不干别的
-            console.log('Requesting camera access...');
+            console.log('Starting camera flow...');
             
-            // 兼容性检查
+            // 1. 检查浏览器支持
             if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-                throw new Error('浏览器不支持摄像头 API');
+                throw new Error('浏览器不支持 getUserMedia API');
             }
 
+            // 2. 尝试获取权限状态 (仅 Chrome 支持，但这步有助于调试)
+            try {
+                const permissionStatus = await navigator.permissions.query({ name: 'camera' });
+                console.log('Permission status:', permissionStatus.state);
+                if (permissionStatus.state === 'denied') {
+                    throw new Error('权限已被拒绝，请手动重置');
+                }
+            } catch (e) {
+                console.log('Permission query not supported or failed:', e);
+            }
+
+            // 3. 请求流
+            console.log('Requesting stream...');
             const stream = await navigator.mediaDevices.getUserMedia({
                 video: { 
                     width: { ideal: 320 }, 
                     height: { ideal: 240 },
                     facingMode: "user"
-                }
+                },
+                audio: false // 明确声明不需要音频
             });
 
-            // 2. 拿到流之后，马上显示出来
+            console.log('Stream acquired:', stream.id);
+
+            // 4. 播放
             this.videoElement.srcObject = stream;
-            
-            // 3. 播放视频
-            await new Promise((resolve) => {
-                this.videoElement.onloadedmetadata = () => {
-                    this.videoElement.play();
-                    resolve();
-                };
-            });
+            this.videoElement.play(); // 直接播放，不需要等待 metadata，有些浏览器会卡在这里
 
-            console.log('Camera started manually');
+            console.log('Camera started successfully');
             this.isReady = true;
-
-            // 4. 只有在摄像头成功启动后，才开始跑 AI 循环
             this.detectLoop();
-            
-            return true; // 返回成功
+            return true;
 
         } catch (err) {
-            console.error('Error starting camera:', err);
-            // ... 错误处理保持不变 ...
-            if (this.onErrorCallback) {
-                let msg = '无法访问摄像头';
-                if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
-                    msg = '请点击地址栏左侧图标，允许使用摄像头。';
-                } else if (err.name === 'NotFoundError') {
-                    msg = '未找到摄像头设备。';
-                } else if (err.name === 'NotReadableError') {
-                    msg = '摄像头可能被其他应用占用。';
-                } else {
-                     msg = '摄像头错误: ' + err.message;
-                }
-                this.onErrorCallback(msg);
+            console.error('Detailed camera error:', err);
+            
+            // 抛出具体的错误信息给按钮显示
+            if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+                throw new Error('请点击地址栏左侧图标 -> 重置权限');
+            } else if (err.name === 'NotFoundError') {
+                throw new Error('未找到摄像头');
             } else {
-                alert('无法启动摄像头：' + err.message);
+                throw new Error(err.message || '启动失败');
             }
-            throw err; // 向上抛出错误，让按钮能恢复状态
         }
     }
 
