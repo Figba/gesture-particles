@@ -3,108 +3,108 @@ import { HandTracker } from './HandTracker.js';
 
 /**
  * 主程序入口
- * 负责连接 UI、粒子系统和手势识别模块。
  */
-
-// 等待 DOM (HTML 结构) 加载完成
 document.addEventListener('DOMContentLoaded', () => {
-    // 1. 初始化粒子系统 (3D 场景)
-    const container = document.getElementById('canvas-container');
-    const particleSystem = new ParticleSystem(container);
-
-    // 2. 处理 UI 交互 (按钮点击、颜色选择)
-    setupUI(particleSystem);
-
-    // 3. 初始化手势识别
+    const startBtn = document.getElementById('start-camera-btn');
+    const statusText = document.getElementById('status-text');
     const videoElement = document.getElementById('video-input');
     const canvasElement = document.getElementById('output-canvas');
     const statusDot = document.getElementById('status-dot');
-    const statusText = document.getElementById('status-text');
 
-    // 手势回调函数：当 HandTracker 计算出手张合度时调用
-    const onGesture = (openness, handX) => {
-        // openness: 0.0 (握拳) ~ 1.0 (张开)
-        // handX: 0.0 (左边) ~ 1.0 (右边)
+    // 0. 按钮点击逻辑 (独立于任何类，确保点击有反应)
+    startBtn.addEventListener('click', async () => {
+        console.log('Button clicked!'); 
+        startBtn.textContent = '正在请求...';
+        startBtn.disabled = true;
+
+        try {
+            // 1. 直接尝试获取摄像头 (最原始的方法，排除 HandTracker 类的干扰)
+            const stream = await navigator.mediaDevices.getUserMedia({
+                video: { width: 320, height: 240, facingMode: 'user' }
+            });
+            
+            console.log('Camera success!');
+            videoElement.srcObject = stream;
+            videoElement.play();
+            
+            // 2. 摄像头成功后，再初始化手势识别和粒子系统
+            // 这样即使 AI 加载失败，至少摄像头画面是有的
+            startBtn.style.display = 'none';
+            statusText.textContent = '摄像头已开启，正在加载 AI 模型...';
+            
+            initApp(videoElement, canvasElement, statusText, statusDot);
+
+        } catch (err) {
+            console.error(err);
+            startBtn.disabled = false;
+            startBtn.style.backgroundColor = '#ff4444';
+            startBtn.textContent = '摄像头启动失败: ' + err.name;
+            alert('摄像头启动失败: ' + err.message);
+        }
+    });
+
+    // 初始化 3D 场景 (这个不依赖摄像头，可以先跑)
+    try {
+        const container = document.getElementById('canvas-container');
+        const particleSystem = new ParticleSystem(container);
+        setupUI(particleSystem);
         
-        // 1. 处理缩放
-        // 将其映射到粒子系统的扩张系数 (expansion)
-        // 设定最小缩放为 0.1 (收缩)，最大为 4.0 (扩散 - 已增大)
+        // 把 particleSystem 挂载到 window 上以便后续调用
+        window.particleSystem = particleSystem;
+    } catch (e) {
+        console.error('3D Scene init failed:', e);
+    }
+});
+
+// 初始化 AI 应用逻辑
+function initApp(videoElement, canvasElement, statusText, statusDot) {
+    const onGesture = (openness, handX) => {
+        const particleSystem = window.particleSystem;
+        if (!particleSystem) return;
+
         const minScale = 0.1;
         const maxScale = 4.0;
-        
-        // 线性映射公式
         const scale = minScale + openness * (maxScale - minScale);
         particleSystem.setExpansion(scale);
 
-        // 2. 处理旋转
-        // 将 handX 映射到旋转角度 -180度 ~ +180度 (-PI ~ PI)
-        // 0.5 是中心点，对应 0 度
-        // 乘以 3 是为了让旋转更灵敏，不仅限于一圈，可以多转一点
         if (handX !== undefined) {
-            // 这里的符号可能需要根据镜像情况微调，目前假设正常逻辑
             const rotationAngle = (handX - 0.5) * Math.PI * 3; 
             particleSystem.setRotation(rotationAngle);
         }
 
-        // 更新 UI 上的状态指示灯和文字
         statusDot.classList.add('ready');
         statusText.textContent = `手势控制中: ${(openness * 100).toFixed(0)}%`;
     };
 
-    // 错误处理回调
-    const onError = (errorMsg) => {
-        statusText.textContent = errorMsg;
-        statusText.style.color = '#ff4444';
-        statusDot.style.backgroundColor = '#ff4444';
+    const onError = (msg) => {
+        statusText.textContent = msg;
+        statusText.style.color = 'red';
     };
 
-    // 启动手势识别
-    // 传入 onGesture 和 onError 两个回调
+    // 这里的 HandTracker 只需要负责 AI 识别，不需要负责启动摄像头了
     const handTracker = new HandTracker(videoElement, canvasElement, onGesture, onError);
     
-    // 修改：绑定按钮事件，点击后才启动
-    const startBtn = document.getElementById('start-camera-btn');
-    startBtn.addEventListener('click', () => {
-        statusText.textContent = '正在请求摄像头...';
-        startBtn.disabled = true; // 防止重复点击
-        startBtn.textContent = '启动中...';
-        
-        handTracker.start().then(() => {
-            startBtn.style.display = 'none'; // 成功后隐藏按钮
-            statusText.textContent = '摄像头已启动';
-        }).catch((err) => {
-            console.error(err);
-            startBtn.disabled = false;
-            // 直接把错误原因写在按钮上
-            startBtn.textContent = err.message || '启动失败，点此重试';
-            startBtn.style.backgroundColor = '#ff4444';
-        });
-    });
-});
+    // 手动设置 ready 状态，因为我们已经在外面启动了摄像头
+    handTracker.isReady = true; 
+    handTracker.detectLoop(); 
+}
 
 function setupUI(particleSystem) {
-    // 1. 图案切换
     const patternBtns = document.querySelectorAll('.pattern-btn');
     patternBtns.forEach(btn => {
         btn.addEventListener('click', (e) => {
-            // 移除所有 active 类
             patternBtns.forEach(b => b.classList.remove('active'));
-            // 添加当前 active 类
             e.target.classList.add('active');
-            
-            // 获取图案名称并设置
             const pattern = e.target.getAttribute('data-pattern');
             particleSystem.setPattern(pattern);
         });
     });
 
-    // 2. 颜色选择
     const colorPicker = document.getElementById('color-picker');
     colorPicker.addEventListener('input', (e) => {
         particleSystem.setColor(e.target.value);
     });
 
-    // 3. 全屏控制
     const fullscreenBtn = document.getElementById('fullscreen-btn');
     fullscreenBtn.addEventListener('click', () => {
         if (!document.fullscreenElement) {
@@ -116,4 +116,3 @@ function setupUI(particleSystem) {
         }
     });
 }
-

@@ -38,60 +38,12 @@ export class HandTracker {
         this.hands.onResults(this.onResults.bind(this));
     }
 
+    // start 方法现在只负责兼容旧逻辑，或者可以留空，因为我们在 main.js 里手动启动了
     async start() {
-        try {
-            console.log('Starting camera flow...');
-            
-            // 1. 检查浏览器支持
-            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-                throw new Error('浏览器不支持 getUserMedia API');
-            }
-
-            // 2. 尝试获取权限状态 (仅 Chrome 支持，但这步有助于调试)
-            try {
-                const permissionStatus = await navigator.permissions.query({ name: 'camera' });
-                console.log('Permission status:', permissionStatus.state);
-                if (permissionStatus.state === 'denied') {
-                    throw new Error('权限已被拒绝，请手动重置');
-                }
-            } catch (e) {
-                console.log('Permission query not supported or failed:', e);
-            }
-
-            // 3. 请求流
-            console.log('Requesting stream...');
-            const stream = await navigator.mediaDevices.getUserMedia({
-                video: { 
-                    width: { ideal: 320 }, 
-                    height: { ideal: 240 },
-                    facingMode: "user"
-                },
-                audio: false // 明确声明不需要音频
-            });
-
-            console.log('Stream acquired:', stream.id);
-
-            // 4. 播放
-            this.videoElement.srcObject = stream;
-            this.videoElement.play(); // 直接播放，不需要等待 metadata，有些浏览器会卡在这里
-
-            console.log('Camera started successfully');
-            this.isReady = true;
-            this.detectLoop();
-            return true;
-
-        } catch (err) {
-            console.error('Detailed camera error:', err);
-            
-            // 抛出具体的错误信息给按钮显示
-            if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
-                throw new Error('请点击地址栏左侧图标 -> 重置权限');
-            } else if (err.name === 'NotFoundError') {
-                throw new Error('未找到摄像头');
-            } else {
-                throw new Error(err.message || '启动失败');
-            }
-        }
+        console.log('HandTracker start called (legacy)');
+        this.isReady = true;
+        this.detectLoop();
+        return true;
     }
 
     async detectLoop() {
