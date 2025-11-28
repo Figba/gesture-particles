@@ -71,12 +71,13 @@ export class HandTracker {
             this.isReady = true;
 
             // 4. 只有在摄像头成功启动后，才开始跑 AI 循环
-            // 这样即使 AI 没加载完，至少用户能看到自己
             this.detectLoop();
+            
+            return true; // 返回成功
 
         } catch (err) {
-            // ... 错误处理保持不变 ...
             console.error('Error starting camera:', err);
+            // ... 错误处理保持不变 ...
             if (this.onErrorCallback) {
                 let msg = '无法访问摄像头';
                 if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
@@ -92,6 +93,7 @@ export class HandTracker {
             } else {
                 alert('无法启动摄像头：' + err.message);
             }
+            throw err; // 向上抛出错误，让按钮能恢复状态
         }
     }
 

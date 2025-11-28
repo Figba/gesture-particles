@@ -61,7 +61,21 @@ document.addEventListener('DOMContentLoaded', () => {
     // 启动手势识别
     // 传入 onGesture 和 onError 两个回调
     const handTracker = new HandTracker(videoElement, canvasElement, onGesture, onError);
-    handTracker.start();
+    
+    // 修改：绑定按钮事件，点击后才启动
+    const startBtn = document.getElementById('start-camera-btn');
+    startBtn.addEventListener('click', () => {
+        statusText.textContent = '正在请求摄像头...';
+        startBtn.disabled = true; // 防止重复点击
+        startBtn.textContent = '启动中...';
+        
+        handTracker.start().then(() => {
+            startBtn.style.display = 'none'; // 成功后隐藏按钮
+        }).catch(() => {
+            startBtn.disabled = false;
+            startBtn.textContent = '重试开启摄像头';
+        });
+    });
 });
 
 function setupUI(particleSystem) {
