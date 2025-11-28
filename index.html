@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Three.js 手势交互粒子系统</title>
+    <link rel="stylesheet" href="src/style.css">
+</head>
+<body>
+    <!-- 3D 场景容器：Three.js 会在这里创建 canvas -->
+    <div id="canvas-container"></div>
+
+    <!-- UI 控制面板：漂浮在左上角 -->
+    <div id="ui-panel" class="panel">
+        <h2>控制面板</h2>
+        
+        <div class="control-group">
+            <label>图案选择</label>
+            <div class="pattern-buttons">
+                <button class="pattern-btn active" data-pattern="sphere">球体</button>
+                <button class="pattern-btn" data-pattern="heart">爱心</button>
+                <button class="pattern-btn" data-pattern="cube">立方体</button>
+            </div>
+        </div>
+
+        <div class="control-group">
+            <label for="color-picker">粒子颜色</label>
+            <input type="color" id="color-picker" value="#00ffff">
+        </div>
+
+        <div class="status-indicator">
+            <span id="status-text">等待摄像头...</span>
+            <div class="status-dot" id="status-dot"></div>
+        </div>
+    </div>
+
+    <!-- 摄像头预览 (默认隐藏或角落显示) -->
+    <video id="video-input" class="input_video" playsinline webkit-playsinline style="display: none;"></video>
+    <canvas id="output-canvas" class="output_canvas" width="320" height="240"></canvas>
+
+    <!-- 全屏按钮 -->
+    <button id="fullscreen-btn" class="icon-btn" title="全屏模式">
+        <svg viewBox="0 0 24 24" width="24" height="24">
+            <path fill="currentColor" d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/>
+        </svg>
+    </button>
+
+    <!-- 脚本入口 -->
+    <script type="module" src="/src/main.js"></script>
+</body>
+</html>
+
