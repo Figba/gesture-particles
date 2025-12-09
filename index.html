@@ -3,57 +3,404 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Three.js 手势交互粒子系统</title>
-    <link rel="stylesheet" href="src/style.css">
-    <!-- 引入 MediaPipe 全局脚本 -->
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
+    <title>Figma Design Restoration</title>
+    <!-- 引入 Tailwind CSS (Use Tailwind CDN for simplicity) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- 引入 Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Noto+Sans+JP:wght@400;500;700&family=Noto+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* 自定义字体设置 */
+        body {
+            font-family: 'Noto Sans', 'Inter', sans-serif;
+        }
+        /* 隐藏滚动条但保留滚动功能 (Hide scrollbar but keep functionality) */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;  /* IE and Edge */
+            scrollbar-width: none;  /* Firefox */
+        }
+    </style>
 </head>
-<body>
-    <!-- 3D 场景容器：Three.js 会在这里创建 canvas -->
-    <div id="canvas-container"></div>
+<body class="bg-[#ebebf1] h-screen w-screen overflow-hidden flex flex-col items-center">
 
-    <!-- UI 控制面板：漂浮在左上角 -->
-    <div id="ui-panel" class="panel">
-        <h2>控制面板</h2>
+    <!-- 主容器 -->
+    <div class="flex flex-col items-center w-full h-full relative" data-name="已有部分备注">
         
-        <div class="control-group">
-            <label>图案选择</label>
-            <div class="pattern-buttons">
-                <button class="pattern-btn active" data-pattern="sphere">球体</button>
-                <button class="pattern-btn" data-pattern="heart">爱心</button>
-                <button class="pattern-btn" data-pattern="cube">立方体</button>
+        <!-- 顶部工具栏和内容区域 -->
+        <div class="flex items-center justify-between w-full h-full relative">
+            
+            <!-- 左侧主内容区域 (图片表格) -->
+            <div class="flex flex-col h-full grow items-center justify-between min-w-0 relative">
+                
+                <!-- 工具栏 Header -->
+                <div class="bg-[#ebebf1] flex gap-[16px] h-[64px] items-center justify-center px-[16px] py-[12px] w-full shrink-0 z-10">
+                    <div class="flex items-center grow gap-[8px] relative">
+                        
+                        <!-- 左侧：返回和快捷键 -->
+                        <div class="flex gap-[8px] items-center w-[180px] shrink-0">
+                            <!-- 返回图标 (Arrow Left) -->
+                            <div class="relative w-[16px] h-[16px] overflow-hidden cursor-pointer">
+                                <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M16 7H3.83L9.42 1.41L8 0L0 8L8 16L9.41 14.59L3.83 9H16V7Z" fill="black"/>
+                                </svg>
+                            </div>
+                            <!-- 快捷键提示 -->
+                            <div class="flex gap-[8px] items-center">
+                                <div class="bg-white flex h-[24px] items-center justify-center px-[8px] rounded-[4px] shadow-sm">
+                                    <span class="text-[12px] text-black font-normal font-['Inter']">Esc</span>
+                                </div>
+                                <span class="text-[14px] text-black font-normal">关闭</span>
+                            </div>
+                        </div>
+
+                        <!-- 中间：日期 (隐形或显示，设计稿中有 opacity-0 但也有 visible 的部分，这里还原可见部分) -->
+                        <div class="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 flex gap-[8px] items-center justify-center">
+                            <p class="text-[#333333] text-[18px] font-bold whitespace-nowrap">2025-12-02</p>
+                        </div>
+
+                        <!-- 右侧：缩放和导出 -->
+                        <div class="flex grow justify-end items-center gap-[8px]">
+                            <!-- 缩放控制 -->
+                            <div class="flex gap-[8px] items-center">
+                                <div class="flex items-center justify-center gap-[8px] bg-white/50 rounded-[4px] p-1">
+                                    <button class="w-[24px] h-[24px] flex items-center justify-center hover:bg-white rounded">
+                                        <!-- Zoom Out Icon -->
+                                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                            <path d="M14 8H2" stroke="black" stroke-width="1.5" stroke-linecap="round"/>
+                                        </svg>
+                                    </button>
+                                    <span class="text-[14px] font-medium text-black">180%</span>
+                                    <button class="w-[24px] h-[24px] flex items-center justify-center hover:bg-white rounded">
+                                        <!-- Zoom In Icon -->
+                                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                            <path d="M8 2V14M14 8H2" stroke="black" stroke-width="1.5" stroke-linecap="round"/>
+                                        </svg>
+                                    </button>
+                                </div>
+                                <!-- 分隔线 -->
+                                <div class="w-px h-[23px] bg-gray-300"></div>
+                                <!-- 旋转图标 (Placeholder) -->
+                                <div class="w-[24px] h-[24px] flex items-center justify-center">
+                                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3" stroke="black" stroke-width="2" stroke-linecap="round"/>
+                                    </svg>
+                                </div>
+                            </div>
+
+                            <!-- 导出按钮 -->
+                            <div class="bg-white flex gap-[8px] h-[32px] items-center px-[16px] rounded-[4px] cursor-pointer shadow-sm hover:bg-gray-50">
+                                <!-- Cloud Download Icon -->
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                    <polyline points="7 10 12 15 17 10"></polyline>
+                                    <line x1="12" y1="15" x2="12" y2="3"></line>
+                                </svg>
+                                <span class="text-[14px] text-black">导出</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 表格内容区域 -->
+                <div class="flex grow w-full overflow-y-auto px-[8px] rounded-[8px] relative no-scrollbar">
+                    
+                    <!-- 第一列：尺寸说明 (Column 1: Size) -->
+                    <div class="flex flex-col w-[100px] shrink-0 z-10 bg-[#ebebf1]">
+                        <!-- 表头 (Sticky) -->
+                        <div class="h-[48px] flex items-center pl-[16px] pr-[8px] sticky top-0 bg-[#ebebf1] z-20">
+                             <!-- Design has size header opacity 0 or formatted differently, using placeholder -->
+                             <span class="text-[12px] font-semibold text-gray-500 uppercase">SIZE</span>
+                        </div>
+                        <!-- 尺寸列表 -->
+                         <div class="flex flex-col gap-[8px] border-r border-gray-300 pr-[8px] py-[8px]">
+                            <div class="h-[210px] flex items-center justify-start pl-[16px]">
+                                <div class="flex flex-col text-[14px] font-semibold text-black">
+                                    <p class="mb-0">Master</p>
+                                    <p>300 x 250</p>
+                                </div>
+                            </div>
+                            <div class="h-[210px] flex items-center justify-start pl-[16px]">
+                                <span class="text-[14px] font-semibold text-black">300 x 250</span>
+                            </div>
+                            <div class="h-[330px] flex items-center justify-start pl-[16px]">
+                                <span class="text-[14px] font-semibold text-black">300 x 300</span>
+                            </div>
+                            <div class="h-[210px] flex items-center justify-start pl-[16px]">
+                                <span class="text-[14px] font-semibold text-black">400 x 600</span>
+                            </div>
+                            <div class="h-[210px] flex items-center justify-start pl-[16px]">
+                                <span class="text-[14px] font-medium text-black">600 x 500</span>
+                            </div>
+                            <div class="h-[210px] flex items-center justify-start pl-[16px]">
+                                <span class="text-[14px] font-medium text-black">1200 x 628</span>
+                            </div>
+                         </div>
+                    </div>
+
+                    <!-- 第二列：日语 (Column 2: Japanese) -->
+                    <div class="flex flex-col shrink-0 items-center min-w-[240px] border-r border-gray-300">
+                        <div class="sticky top-0 z-10 bg-[#ebebf1] w-full flex justify-center py-[8px]">
+                            <div class="bg-[#ffccc7] border border-white/20 h-[32px] flex items-center justify-center px-[60px] rounded-[8px]">
+                                <span class="text-[#a8071a] text-[14px]">日本语</span>
+                            </div>
+                        </div>
+                        <div class="flex flex-col w-full items-center p-[8px]">
+                            <!-- Row 1 -->
+                            <div class="h-[210px] w-full flex items-center justify-center relative border-b border-gray-300">
+                                <div class="w-[174px] h-[194px] relative bg-gray-200">
+                                    <img src="https://placehold.co/174x174/png?text=JP+Master" class="w-full h-[174px] object-cover" alt="img">
+                                    <div class="absolute bottom-0 left-0 w-full h-[20px] bg-[#17b6ae] flex items-center justify-center">
+                                        <!-- Small icon -->
+                                        <div class="w-[12px] h-[12px] bg-white rounded-full"></div> 
+                                    </div>
+                                </div>
+                            </div>
+                             <!-- Row 2 -->
+                             <div class="h-[210px] w-full flex items-center justify-center relative border-b border-gray-300">
+                                <div class="w-[200px] h-[166px] bg-gray-200">
+                                    <img src="https://placehold.co/300x250/png?text=JP+300x250" class="w-full h-full object-cover" alt="img">
+                                </div>
+                            </div>
+                             <!-- Row 3 (Merged cells in design?) - Looks like nested structure in code -->
+                             <!-- The code shows "image 88" again in a cell, then a NEWS card -->
+                             <div class="h-[210px] w-full flex items-center justify-center relative border-b border-gray-300">
+                                <div class="w-[174px] h-[194px] relative bg-gray-200">
+                                    <img src="https://placehold.co/174x174/png?text=JP+300x300" class="w-full h-[174px] object-cover" alt="img">
+                                    <div class="absolute bottom-0 left-0 w-full h-[20px] bg-[#17b6ae] flex items-center justify-center">
+                                         <div class="w-[12px] h-[12px] bg-white rounded-full"></div> 
+                                    </div>
+                                </div>
+                             </div>
+                             <!-- Special Card Insert -->
+                             <div class="h-[120px] w-full flex items-center justify-center border-b border-gray-300">
+                                <div class="bg-white p-2 rounded shadow text-[10px] w-[200px]">
+                                    <p class="font-bold mb-1">「サービス開始日決定」</p>
+                                    <p>2025年11月18日にサービス開始！</p>
+                                </div>
+                             </div>
+
+                             <!-- Row 4 -->
+                             <div class="h-[210px] w-full flex items-center justify-center relative border-b border-gray-300">
+                                <div class="w-[150px] h-[200px] bg-gray-200 border-2 border-[#17b6ae]">
+                                    <img src="https://placehold.co/400x600/png?text=JP+400x600" class="w-full h-full object-cover" alt="img">
+                                </div>
+                            </div>
+
+                             <!-- Row 5 -->
+                             <div class="h-[210px] w-full flex items-center justify-center relative border-b border-gray-300">
+                                <div class="w-[200px] h-[166px] bg-gray-200">
+                                    <img src="https://placehold.co/600x500/png?text=JP+600x500" class="w-full h-full object-cover" alt="img">
+                                </div>
+                            </div>
+
+                             <!-- Row 6 -->
+                             <div class="h-[210px] w-full flex items-center justify-center relative">
+                                <div class="w-[220px] h-[115px] bg-gray-200">
+                                    <img src="https://placehold.co/1200x628/png?text=JP+1200x628" class="w-full h-full object-cover" alt="img">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 第三列：韩语 (Column 3: Korean) -->
+                    <div class="flex flex-col shrink-0 items-center min-w-[240px] border-r border-gray-300">
+                         <div class="sticky top-0 z-10 bg-[#ebebf1] w-full flex justify-center py-[8px]">
+                            <div class="bg-[#fffb8f] border border-white/20 h-[32px] flex items-center justify-center px-[60px] rounded-[8px]">
+                                <span class="text-[#876800] text-[14px]">英语</span> <!-- Code says "English" in text but header color implies different logic. Design text says "英语" (English) but column title in code was "Korean"? Wait, code says "英语" (English) in text content. Design text is authority. -->
+                            </div>
+                        </div>
+                        <div class="flex flex-col w-full items-center p-[8px]">
+                             <!-- Row 1 -->
+                             <div class="h-[210px] w-full flex items-center justify-center relative border-b border-gray-300">
+                                <div class="w-[174px] h-[194px] relative bg-gray-200">
+                                    <img src="https://placehold.co/174x174/png?text=EN+Master" class="w-full h-[174px] object-cover" alt="img">
+                                    <div class="absolute bottom-0 left-0 w-full h-[20px] bg-[#f6685d] flex items-center justify-center">
+                                         <div class="w-[12px] h-[12px] bg-white rounded-full"></div> 
+                                    </div>
+                                </div>
+                            </div>
+                             <!-- Row 2 -->
+                             <div class="h-[210px] w-full flex items-center justify-center relative border-b border-gray-300">
+                                <div class="w-[200px] h-[166px] bg-gray-200">
+                                    <img src="https://placehold.co/300x250/png?text=EN+300x250" class="w-full h-full object-cover" alt="img">
+                                </div>
+                            </div>
+                             <!-- Row 3 -->
+                             <div class="h-[330px] w-full flex items-center justify-center relative border-b border-gray-300">
+                                <!-- Empty or placeholder -->
+                                <div class="w-[200px] h-[200px] border border-dashed border-gray-400 flex items-center justify-center text-gray-400">Missing</div>
+                            </div>
+                             <!-- Row 4 -->
+                             <div class="h-[210px] w-full flex items-center justify-center relative border-b border-gray-300">
+                                <div class="w-[200px] h-[166px] bg-gray-200">
+                                    <img src="https://placehold.co/600x500/png?text=EN+600x500" class="w-full h-full object-cover" alt="img">
+                                </div>
+                            </div>
+                             <!-- Row 5 -->
+                             <div class="h-[210px] w-full flex items-center justify-center relative border-b border-gray-300">
+                                <div class="w-[220px] h-[115px] bg-gray-200">
+                                    <img src="https://placehold.co/1200x628/png?text=EN+1200x628" class="w-full h-full object-cover" alt="img">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 第四列：繁体中文 (Column 4: Traditional Chinese) -->
+                    <div class="flex flex-col shrink-0 items-center min-w-[240px]">
+                         <div class="sticky top-0 z-10 bg-[#ebebf1] w-full flex justify-center py-[8px]">
+                            <div class="bg-[#b7eb8f] border border-white/20 h-[32px] flex items-center justify-center px-[60px] rounded-[8px]">
+                                <span class="text-[#237804] text-[14px]">韩国语</span> <!-- Code text says "韩国语" (Korean) here -->
+                            </div>
+                        </div>
+                        <div class="flex flex-col w-full items-center p-[8px]">
+                             <!-- Row 1 -->
+                             <div class="h-[210px] w-full flex items-center justify-center relative border-b border-gray-300">
+                                <div class="w-[174px] h-[194px] relative bg-gray-200">
+                                    <img src="https://placehold.co/174x174/png?text=KR+Master" class="w-full h-[174px] object-cover" alt="img">
+                                    <div class="absolute bottom-0 left-0 w-full h-[20px] bg-[#ffa940] flex items-center justify-center">
+                                         <div class="w-[12px] h-[12px] bg-white rounded-full"></div> 
+                                    </div>
+                                </div>
+                            </div>
+                             <!-- Row 2 -->
+                             <div class="h-[210px] w-full flex items-center justify-center relative border-b border-gray-300">
+                                <div class="w-[200px] h-[166px] bg-gray-200">
+                                    <img src="https://placehold.co/300x250/png?text=KR+300x250" class="w-full h-full object-cover" alt="img">
+                                </div>
+                            </div>
+                             <!-- Row 3, 4, 5... similar structure -->
+                             <div class="h-[330px] w-full flex items-center justify-center relative border-b border-gray-300">
+                                <div class="w-[200px] h-[200px] border border-dashed border-gray-400 flex items-center justify-center text-gray-400">Missing</div>
+                             </div>
+                             <div class="h-[210px] w-full flex items-center justify-center relative border-b border-gray-300">
+                                <div class="w-[200px] h-[166px] bg-gray-200">
+                                    <img src="https://placehold.co/600x500/png?text=KR+600x500" class="w-full h-full object-cover" alt="img">
+                                </div>
+                            </div>
+                             <div class="h-[210px] w-full flex items-center justify-center relative">
+                                <div class="w-[220px] h-[115px] bg-gray-200">
+                                    <img src="https://placehold.co/1200x628/png?text=KR+1200x628" class="w-full h-full object-cover" alt="img">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 第五列 (繁体中文) - Code implies 4 columns of images, let's add the last one -->
+                     <div class="flex flex-col shrink-0 items-center min-w-[240px]">
+                         <div class="sticky top-0 z-10 bg-[#ebebf1] w-full flex justify-center py-[8px]">
+                            <div class="bg-[#bae0ff] border border-white/20 h-[32px] flex items-center justify-center px-[50px] rounded-[8px]">
+                                <span class="text-[#003eb3] text-[14px]">繁体中国语</span>
+                            </div>
+                        </div>
+                         <div class="flex flex-col w-full items-center p-[8px]">
+                             <!-- Row 1 -->
+                             <div class="h-[210px] w-full flex items-center justify-center relative border-b border-gray-300">
+                                <div class="w-[174px] h-[194px] relative bg-gray-200">
+                                    <img src="https://placehold.co/174x174/png?text=TC+Master" class="w-full h-[174px] object-cover" alt="img">
+                                </div>
+                            </div>
+                             <!-- Row 2 -->
+                             <div class="h-[210px] w-full flex items-center justify-center relative border-b border-gray-300">
+                                <div class="w-[200px] h-[166px] bg-gray-200">
+                                    <img src="https://placehold.co/300x250/png?text=TC+300x250" class="w-full h-full object-cover" alt="img">
+                                </div>
+                            </div>
+                            <!-- ... filling rest ... -->
+                             <div class="h-[330px] w-full flex items-center justify-center relative border-b border-gray-300">
+                                <div class="w-[200px] h-[200px] border border-dashed border-gray-400 flex items-center justify-center text-gray-400">Missing</div>
+                             </div>
+                        </div>
+                    </div>
+
+                </div>
             </div>
+
+            <!-- 右侧：评论区 Sidebar -->
+            <div class="w-[280px] h-full flex flex-col shrink-0 py-[12px] pr-[12px]">
+                <div class="bg-white w-full h-full rounded-[12px] flex flex-col overflow-hidden">
+                    <!-- 标题 -->
+                    <div class="p-[16px] flex flex-col gap-[12px]">
+                        <div class="flex items-center gap-[8px]">
+                            <span class="text-[16px] font-bold text-[#333333]">监修备注</span>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                        </div>
+                        <!-- 状态按钮 -->
+                        <div class="bg-[#17b6ae] text-white rounded-[8px] h-[36px] flex items-center justify-center gap-[8px] cursor-pointer">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+                            <span class="text-[12px] font-semibold">576 OK / 12 Need Fix</span>
+                        </div>
+                    </div>
+
+                    <!-- 评论列表 -->
+                    <div class="flex-1 overflow-y-auto px-[16px] flex flex-col gap-[16px]">
+                        
+                        <!-- Comment 1 -->
+                        <div class="bg-[#f1f7f7] p-[8px] rounded-[8px] flex flex-col gap-[4px]">
+                            <div class="flex items-center gap-[4px]">
+                                <div class="w-[16px] h-[16px] bg-[#5245e8] rounded-[4px] flex items-center justify-center text-white text-[10px]">G</div>
+                                <span class="text-[12px] font-bold">yamada.t</span>
+                                <div class="bg-[#ff5252] text-white text-[10px] px-[4px] rounded-[4px]">要修正</div>
+                            </div>
+                            <p class="text-[12px] leading-[1.5]">UI/UXレビュー：新しいレイアウト案についてのフィードバックを求めます。</p>
+                            <div class="flex justify-between text-[12px] text-gray-500 mt-1">
+                                <span>2025/05/17 13:30</span>
+                                <span class="text-[#4096ff]">4 replies</span>
+                            </div>
+                        </div>
+
+                        <!-- Comment 2 -->
+                        <div class="bg-[#f1f7f7] p-[8px] rounded-[8px] flex flex-col gap-[4px]">
+                             <div class="flex items-center gap-[4px]">
+                                <div class="w-[16px] h-[16px] bg-[#5245e8] rounded-[4px] flex items-center justify-center text-white text-[10px]">G</div>
+                                <span class="text-[12px] font-bold">nishimura.r</span>
+                                <div class="bg-[#ff5252] text-white text-[10px] px-[4px] rounded-[4px]">要修正</div>
+                            </div>
+                            <p class="text-[12px] leading-[1.5]">キャラクターデザイン：背景の色調整が必要です。</p>
+                             <div class="flex justify-between text-[12px] text-gray-500 mt-1">
+                                <span>2025/05/16 11:45</span>
+                                <span class="text-[#4096ff]">2 replies</span>
+                            </div>
+                        </div>
+
+                         <!-- Comment 3 (Special) -->
+                        <div class="bg-[#fff8f1] p-[8px] rounded-[8px] flex flex-col gap-[4px]">
+                             <div class="flex items-center gap-[4px]">
+                                <div class="w-[16px] h-[16px] bg-[#ff5a1f] rounded-[4px]"></div>
+                                <span class="text-[12px] font-bold truncate max-w-[120px]">株式会社藤子・F...</span>
+                                <div class="bg-[#efefef] text-black text-[10px] px-[4px] rounded-[4px]">补充</div>
+                            </div>
+                            <p class="text-[12px] leading-[1.5]">上半身が横に揺れるのですが、小さく縦方向の動きにしていただけないでしょうか。</p>
+                             <div class="flex justify-between text-[12px] text-gray-500 mt-1">
+                                <span>2025/05/14 15:06</span>
+                                <span class="text-[#4096ff]">2 replies</span>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- 底部历史 -->
+                    <div class="p-[16px] mt-auto">
+                        <div class="bg-[#f3f4f6] p-[8px] rounded-[8px]">
+                            <div class="flex items-center justify-between">
+                                <div class="bg-[#8177f3] text-white text-[12px] px-[8px] py-[2px] rounded-[4px]">历史评论</div>
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="transform rotate-180"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
         </div>
 
-        <div class="control-group">
-            <label for="color-picker">粒子颜色</label>
-            <input type="color" id="color-picker" value="#00ffff">
-        </div>
+        <!-- 悬浮标记 (Floating Badges) -->
+        <div class="absolute left-[1080px] top-[218px] w-[20px] h-[20px] bg-[#ff5a1f] rounded-full border border-white shadow-md z-50"></div>
+        <div class="absolute left-[956px] top-[466px] w-[20px] h-[20px] bg-[#ff5a1f] rounded-full border border-white shadow-md z-50"></div>
+        <div class="absolute left-[534px] top-[412px] w-[20px] h-[20px] bg-[#ff5a1f] rounded-full border border-white shadow-md z-50"></div>
 
-        <div class="status-indicator">
-            <span id="status-text">点击按钮开启摄像头</span>
-            <div class="status-dot" id="status-dot"></div>
-        </div>
-        
-        <!-- 新增：显眼的启动按钮 -->
-        <button id="start-camera-btn" class="start-btn">开启摄像头 / Start Camera</button>
     </div>
-
-    <!-- 摄像头预览 (默认隐藏或角落显示) -->
-    <video id="video-input" class="input_video" playsinline webkit-playsinline style="display: none;"></video>
-    <canvas id="output-canvas" class="output_canvas" width="320" height="240"></canvas>
-
-    <!-- 全屏按钮 -->
-    <button id="fullscreen-btn" class="icon-btn" title="全屏模式">
-        <svg viewBox="0 0 24 24" width="24" height="24">
-            <path fill="currentColor" d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/>
-        </svg>
-    </button>
-
-    <!-- 脚本入口 -->
-    <script type="module" src="/src/main.js"></script>
 </body>
 </html>
 
